@@ -1,0 +1,42 @@
+What does work!
+a) different angular versions in different routes
+b) isolated css thanks to angular
+c) applications coming from different servers
+d) multiple applications per page but, it should not have collisions
+e) Scope isolation over loader only
+f) separate hosting of portaled applications
+
+What does not work!
+a) Different angular versions on the same page (unwanted sidebehavior like endless inits, console errors)
+b) Total scope isolation unless we use iframes
+c) isolation of the root context, whatever goes into window is accessible for all
+d) Mixing two different frameworks on the same page
+
+Other notes:
+Setup instructions partially wrong, the getting started guide did not work and cost me half a day of error search
+i recommend to use one of the many github starters as entry point
+For a portal like approach I would recommend an additional portal app as root which hosts the tiles as links
+with some live data.
+
+Also there does not seem to be any standardized infrastructure for portal communication
+while this is not complicated to roll on our own we have to take that into consideration.
+There also is no standardized tiling approach we have to roll our own root app, maybe with one
+existing project as a base!
+
+
+# Open Components
+
+backend storage S3 or google only... not further evaluated
+
+# Piral
+
+Base building blocks, micro applications called pilets...
+Pilets offer a reduced and a page view
+
+Angular connector exists, via so called converters however:
+* Reduced views with several legacy angular apps fore sure not possible due to conflict issues (same as in single-spa
+but in single-spa there is a workaround)
+* Not quite sure yet how to pull the necessary pilet from a remote server running the angular app
+(there must be a way), the documentation so far I have seen requires a local pilet or a
+distribution server!
+

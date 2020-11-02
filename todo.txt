@@ -1,0 +1,11 @@
+check lazy loading of submodules and angular 7 problems
+
+No problems, however restriction, all navigational cases must be
+with the spa path prefixed!
+
+
+send in the recursion bug when mixing two angular versions in one page
+- isolation and sending it in
+
+
+look into other frameworks which might come along
