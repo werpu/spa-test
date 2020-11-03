@@ -7,6 +7,11 @@
     <title>Your application</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="importmap-type" content="systemjs-importmap">
+    <style type="text/css">
+      .isolation-test {
+        background-color: red;
+      }
+    </style>
     <script type="systemjs-importmap">
       {
         "imports": {
@@ -33,12 +38,17 @@
     <template id="single-spa-layout">
       <single-spa-router>
 
-        <nav class="topnav" style="position: fixed; top: 0; left: 0; z-index: 10; background-color: white; border: 1px solid black; padding: 10px; border-radius: 5px;">
+        <nav class="topnav" style="position: fixed; top: 50px; right: 0; z-index: 10; background-color: white; border: 1px solid black; padding: 10px; border-radius: 5px;">
           <application name="navbar"></application>
         </nav>
 
 
         <div class="main-content"  >
+          <div class="isolation-test"
+               style="width: 100px; height; 100px; border: 1px solid black;">
+            Isolation Test
+          </div>
+
 
           <h2 style="text-align: center">Main Content</h2>
 
