@@ -7,5 +7,13 @@ with the spa path prefixed!
 send in the recursion bug when mixing two angular versions in one page
 - isolation and sending it in
 
+- isolation strategies....
+legacy browsers ... iframe
+newer browsers ... shadow dom and angular elements
+as strategy on top of it
+
+
+
+
 
 look into other frameworks which might come along
