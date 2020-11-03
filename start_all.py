@@ -4,13 +4,13 @@ import os
 import sys
 
 os.system("""
-cd ang-app
+cd angular9
 npm run serve:single-spa:ang-app &
 cd ..
-cd ang-app2
+cd angular8
 npm run serve:single-spa:ang-app2 &
 cd ..
-cd ang-app3
+cd angular7
 npm run serve:single-spa &
 cd ..
 cd navbar
