@@ -19,7 +19,6 @@ themselves! Which cannot work for instance with shared globals
 
 (check the link)
 
-
 - isolation strategies....
 legacy browsers ... iframe
 newer browsers ... shadow dom and angular elements
