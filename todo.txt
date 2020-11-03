@@ -5,15 +5,24 @@ with the spa path prefixed!
 
 
 send in the recursion bug when mixing two angular versions in one page
-- isolation and sending it in
+- isolation and sending it in .. todo! (will ask in slack first)
+
+https://github.com/single-spa/single-spa/issues/114
+
+not a bug... this is heavily dependent on the framework
+something in the angular applications collide
+
 
 - isolation strategies....
 legacy browsers ... iframe
 newer browsers ... shadow dom and angular elements
 as strategy on top of it
 
-
-
+Isolation and emulated isolation works on css level
+but needs adaption on the angular side:
+(the master component needs an isolation flag which is part of angular)
 
 
 look into other frameworks which might come along
+
+
