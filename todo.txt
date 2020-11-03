@@ -11,6 +11,14 @@ https://github.com/single-spa/single-spa/issues/114
 
 not a bug... this is heavily dependent on the framework
 something in the angular applications collide
+different versions might work better... but single spa itself
+does nothing about the isolation. The plugin
+cannot do anything because it works on unload
+not double page load! So the frameworks have to isolate
+themselves! Which cannot work for instance with shared globals
+
+(check the link)
+
 
 
 - isolation strategies....
