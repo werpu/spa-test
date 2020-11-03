@@ -1,9 +1,10 @@
-import {Component, OnInit, VERSION} from '@angular/core';
+import {Component, OnInit, VERSION, ViewEncapsulation} from '@angular/core';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  encapsulation: ViewEncapsulation.Emulated
 })
 export class AppComponent implements OnInit {
   title = 'ang-app3';
