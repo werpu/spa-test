@@ -28,7 +28,94 @@ Isolation and emulated isolation works on css level
 but needs adaption on the angular side:
 (the master component needs an isolation flag which is part of angular)
 
-
 look into other frameworks which might come along
+
+
+other Frameworks:
+
+https://itnext.io/11-micro-frontends-frameworks-you-should-know-b66913b9cd20
+
+
+bit framework: tailored components for reuse
+https://bit.dev/
+probably not useful for legacy applications unless you use iframes...
+Documentation excellent
+
+Qiankun:
+Builds on top of single spa and claims to add another layer of isolation
+chinese framework and documentation lacking
+
+
+Webpack module federation:
+More like a module definition sitting on top of webpack which allows lazy or eager instantiation
+of modules... Not specific to micro frontents, but also nothing ui related specific
+like navigation handling etc... probably not really usable for us
+
+https://docs.luigi-project.io
+
+Very interesting solution from SAP, higher level than single-spa reduces itself to standard navigational
+elements and a details view which pulls remote sites in (maybe iframe based, have to check it=
+
+Maybe worthwhile to investigate! Seems to tackle the same issues single-spa does but on a
+higher level!
+
+(will look into it tomorrow)
+
+...  looked into it, the problem is it relies on iframes only for the content. So nothing really
+is gained over single-spa....
+
+
+
+Proposed way forward...
+
+a) build infrastructure template which allows for a double build
+for single spa and standalone servers (this is possible but not covered by the generators)
+
+b) Add high level client frameworks which deal with communications (one thing we can learn from luigi)
+wich allows intra communication between non iframed and iframed applications
+
+c) Define an api/build for exposing micro portlets from an application (for micro portlets for now
+we probably really can go the iframe way for now to allow proper mixing, but thing is, the micro portlets need
+to use the communications api)
+
+d) generate a clear porting guideline
+
+Maybe
+ has something like this already, so we can reuse that
+if not, we probably have to roll it our own!
+
+Communications api... needs following corner stones
+
+* messaging in both directions (should be possible even with iframes)
+* init and unload messages
+* global url/path change message from the window to the portlets so that single portlets can react to
+* hash/path changes
+* state change messages in both directions
+* generic messages in both directions
+* defined namespaces for messages so that we dont react on the wrong messages!
+* The messaging system must work for following cases
+  ** unisolated dom
+  ** shadow dom with isolation
+  ** iframes
+* Switching between different isolation levels should not affect the messages at all!
+
+
+Maybe giving that api back to the single-spa guys, so that it becomes part of the project!
+So a liberal license aka something like MIT should be necessary!
+
+
+----
+
+-- double build
+-- utility module (single spa)
+-- messaging
+-- portal guidelines (start)
+
+
+
+
+
+
+
 
 
