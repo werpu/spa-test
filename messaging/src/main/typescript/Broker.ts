@@ -80,17 +80,17 @@ export class Broker {
         this.messageListeners = (this.messageListeners[channel] || []).filter((item: any) => item !== listener);
     }
 
-    broadcast(message: Message, direction: Direction = Direction.DOWN, ignoreListeners = true) {
+    broadcast(message: Message, direction: Direction = Direction.DOWN, callBrokerListeners = true) {
 
         switch (direction) {
             case Direction.DOWN:
-                this.dispatchDown(message, ignoreListeners);
+                this.dispatchDown(message, callBrokerListeners);
                 break;
             case Direction.UP:
-                this.dispatchUp(message, ignoreListeners)
+                this.dispatchUp(message, callBrokerListeners)
                 break;
             case Direction.BOTH:
-                this.dispatchBoth(message, ignoreListeners);
+                this.dispatchBoth(message, callBrokerListeners);
                 break;
         }
 
@@ -105,7 +105,7 @@ export class Broker {
         this.dispatchDown(message, true, false)
     }
 
-    private dispatchUp(message: Message, ignoreListeners = true, dispatchSameLevel = true) {
+    private dispatchUp(message: Message, ignoreListeners = true, callBrokerListeners = true) {
         if (!ignoreListeners) {
             this.callListeners(message);
         }
@@ -114,7 +114,7 @@ export class Broker {
         if (window.parent != null) {
             window.parent.postMessage(message, window.location.href);
         }
-        if (dispatchSameLevel) {
+        if (callBrokerListeners) {
             this.dispatchSameLevel(message);
         }
 
@@ -128,7 +128,7 @@ export class Broker {
     }
 
 //a dispatch of our own should never trigger the listeners hence the default true
-    private dispatchDown(message: Message, ignoreListeners = true, dispatchSameLevel = true) {
+    private dispatchDown(message: Message, ignoreListeners = true, callBrokerListeners = true) {
         if (!ignoreListeners) {
             this.callListeners(message);
         }
@@ -139,7 +139,7 @@ export class Broker {
         document.querySelectorAll("iframe").forEach((element: HTMLIFrameElement) => {
             element.contentWindow.postMessage(message, "*")
         });
-        if (dispatchSameLevel) {
+        if (callBrokerListeners) {
             this.dispatchSameLevel(message);
         }
     }
