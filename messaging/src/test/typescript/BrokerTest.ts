@@ -184,13 +184,15 @@ describe('Broker tests', function () {
         //closed not possible this seals the element off entirely, this is a no go
         //also a closed shadow root is not recommended, there are other ways of achieving partial
         //isolation
-        var shadowRoot:ShadowRoot =  (<any>document.getElementById('shadow1')).attachShadow({mode: 'open'});
+        var shadowRoot:ShadowRoot =  (<any>document.getElementById('shadow1')).attachShadow({mode: 'closed'});
         expect(shadowRoot != null).to.be.true;
+        shadowRoot.innerHTML = "<div class='received'>false</div>";
 
         //we now attach the brokers
         let origBroker = new Broker(window, "orig");
         let shadowBroker = new Broker(shadowRoot, "shadow");
-        shadowRoot.innerHTML = "<div class='received'>false</div>";
+
+
 
         let shadowBrokerReceived = 0;
         shadowBroker.registerListener(CHANNEL, (msg: Message) => {
@@ -202,12 +204,19 @@ describe('Broker tests', function () {
             brokerReceived++;
         });
 
+        //from root broker into shadow dom
         origBroker.broadcast(new Message(CHANNEL, "booga"));
         expect(shadowBrokerReceived).to.be.eq(1);
         expect(brokerReceived).to.eq(0);
 
+        //now from shadow dom into broker
         shadowBroker.broadcast(new Message(CHANNEL, "booga2"), Direction.UP);
         expect(brokerReceived).to.eq(1);
+
+        //not closed shadow dom works in a way, that you basically bind the broker as external
+        //to the external element and then use the message handler to pass the data back into
+        //your shadow Root ... the shadow root is basically an internal isolation you can pass
+        //That way, but you have to do it yourself by defining a broker in your component
 
     });
 

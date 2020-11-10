@@ -5,7 +5,7 @@ import {VERSION} from '@angular/core';
   selector: 'ang-app2-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  encapsulation: ViewEncapsulation.ShadowDom
+  encapsulation: ViewEncapsulation.Emulated
 })
 export class AppComponent implements OnInit {
   title = 'ang-app2';
