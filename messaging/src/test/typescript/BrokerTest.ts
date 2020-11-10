@@ -19,7 +19,7 @@ let iframe = `
         `;
 
 
-let applyMessageReceiver = function (contentWindow: any,  msg: Message, brokr = new Broker(contentWindow)) {
+let applyMessageReceiver = function (contentWindow: any, msg: Message, brokr = new Broker(contentWindow)) {
     contentWindow["passMessage"] = function (message: Message) {
         msg = message;
         brokr.registerListener("channel", message => {
@@ -29,7 +29,7 @@ let applyMessageReceiver = function (contentWindow: any,  msg: Message, brokr = 
     }
     return msg;
 };
-describe('DOMQuery tests', function () {
+describe('Broker tests', function () {
 
     beforeEach(function () {
 
@@ -65,7 +65,6 @@ describe('DOMQuery tests', function () {
             language: "en-En"
         };
 
-
         /*this.xhr = sinon.useFakeXMLHttpRequest();
         this.requests = [];
         this.xhr.onCreate = (xhr) => {
@@ -86,13 +85,14 @@ describe('DOMQuery tests', function () {
 
         let msg = new Message("channel", "booga");
         let iframeBroker = new Broker(contentWindow);
+        let origBroker = new Broker();
         msg = applyMessageReceiver(contentWindow, msg, iframeBroker);
 
-        contentWindow.passMessage(msg);
-        Broker.instance.broadcast(msg);
+        //contentWindow.passMessage(msg);
+        origBroker.broadcast(msg);
         let messageReceived = false;
 
-        Broker.instance.registerListener("booga", (msg: Message) => {
+        origBroker.registerListener("booga", (msg: Message) => {
             messageReceived = msg.message == "booga";
         });
 
@@ -119,11 +119,11 @@ describe('DOMQuery tests', function () {
 
         var msg = new Message("channel", "booga");
         msg = applyMessageReceiver(contentWindow, msg);
-
+        var broker = new Broker();
         contentWindow.passMessage(msg);
-        Broker.instance.broadcast(msg);
+        broker.broadcast(msg);
         var msg = new Message("channel2", "booga2");
-        Broker.instance.broadcast(msg);
+        broker.broadcast(msg);
 
         async function analyzeDelayed() {
             await delay(400);
@@ -133,20 +133,53 @@ describe('DOMQuery tests', function () {
         analyzeDelayed();
     });
 
-
-
     it('basic message', function () {
-        let broker = Broker.instance;
+        let broker = new Broker();
         let messageReceived = false;
         broker.registerListener("channel", (message: Message): void => {
             messageReceived = message.message === "booga";
         })
 
-        broker.broadcast(new Message("channel", "booga"))
+        broker.broadcast(new Message("channel", "booga"), Direction.DOWN, false);
         expect(messageReceived).to.be.true;
     })
 
     it('basic init', function () {
         expect(window?.document?.body).not.eq(null);
     });
+
+    it('dual brokers in different systems', function () {
+
+        let broker1 = new Broker();
+        let broker2 = new Broker();
+
+
+        let broker1CallCnt = 0;
+        let broker2CallCnt = 0;
+
+        const CHANNEL = "booga";
+
+        broker1.registerListener(CHANNEL, (message: Message) => {
+            broker1CallCnt++;
+        });
+        broker2.registerListener(CHANNEL, (message: Message) => {
+            broker2CallCnt++;
+        });
+
+        broker1.broadcast(new Message(CHANNEL, "booga"), Direction.BOTH);
+
+
+        expect(broker1CallCnt == 0).to.eq(true);
+        expect(broker2CallCnt == 1).to.eq(true);
+
+        broker2.broadcast(new Message(CHANNEL, "booga"), Direction.BOTH);
+
+        expect(broker1CallCnt == 1).to.eq(true);
+        expect(broker2CallCnt == 1).to.eq(true);
+
+    });
+
+
+    //TODO shadow dom...
+
 });

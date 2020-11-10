@@ -16,9 +16,8 @@ import {Direction} from "./Direction";
  */
 export class Broker {
 
-    static readonly EVENT_TYPE = "brokerEvent/";
+    static readonly EVENT_TYPE = "brokerEvent";
 
-    private static _instance: Broker;
 
     /**
      * we can split the listeners with the system
@@ -32,31 +31,24 @@ export class Broker {
     private cleanupCnt = 0;
 
 
-
-    static get instance(): Broker {
-        if(!Broker._instance) {
-            Broker._instance = new Broker();
-        }
-        return Broker._instance;
-    }
-
-
     constructor(wnd = window) {
 
-        let evtHandler = (event: MessageEvent) => {
-            if((<any>event)?.data instanceof Message){
-                let wrapper = <MessageEvent> event;
-                let msg: Message = wrapper.data;
-                if(msg.identifier in this.processedMessages) {
+        let evtHandler = (event: MessageEvent | CustomEvent<Message>) => {
+            let details = (<CustomEvent>event)?.detail || (<MessageEvent>event)?.data;
+            if (details instanceof Message) {
+
+                let msg: Message = details;
+                if (msg.identifier in this.processedMessages) {
                     return;
                 }
                 //coming in from up... we need to send it down
-                this.broadcast(msg, Direction.DOWN);
+                //a relayed message always has to trigger the listeners as well
+                this.broadcast(msg, Direction.DOWN, false);
             }
         };
 
-        wnd.addEventListener(Broker.EVENT_TYPE, evtHandler);
-        wnd.addEventListener("message", evtHandler);
+        wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+        wnd.addEventListener("message", (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
     }
 
     registerListener(channel: string, listener: (msg: Message) => void) {
@@ -65,7 +57,7 @@ export class Broker {
         //we skip the processed messages, because they originated here
         //and already are processed
         this.messageListeners[channel].push((msg: Message) => {
-            if(this.processedMessages[msg.identifier]) {
+            if (msg.identifier in this.processedMessages) {
                 return;
             }
             listener(msg);
@@ -73,12 +65,12 @@ export class Broker {
     }
 
     gcProcessedMessages() {
-        if((++this.cleanupCnt) % 10 != 0) {
+        if ((++this.cleanupCnt) % 10 != 0) {
             return;
         }
         let newProcessedMessages: any = {};
-        for(let key in this.processedMessages) {
-            if(this.processedMessages[key] < ((new Date()).getMilliseconds() - 1000)) continue;
+        for (let key in this.processedMessages) {
+            if (this.processedMessages[key] < ((new Date()).getMilliseconds() - 1000)) continue;
             newProcessedMessages[key] = this.processedMessages[key];
         }
         this.processedMessages = newProcessedMessages;
@@ -88,51 +80,68 @@ export class Broker {
         this.messageListeners = (this.messageListeners[channel] || []).filter((item: any) => item !== listener);
     }
 
-    broadcast(message: Message, direction: Direction = Direction.DOWN) {
+    broadcast(message: Message, direction: Direction = Direction.DOWN, ignoreListeners = true) {
+
         switch (direction) {
             case Direction.DOWN:
-                this.dispatchDown(message);
+                this.dispatchDown(message, ignoreListeners);
                 break;
             case Direction.UP:
-                this.dispatchUp(message)
+                this.dispatchUp(message, ignoreListeners)
                 break;
             case Direction.BOTH:
-                this.dispatchBoth(message);
+                this.dispatchBoth(message, ignoreListeners);
                 break;
         }
 
-        this.processedMessages[message.identifier] = message.creationDate;
+
         this.gcProcessedMessages();
     }
 
-    private dispatchBoth(message: Message) {
-        this.dispatchUp(message);
+    private dispatchBoth(message: Message, ignoreListeners = true) {
+
+        this.dispatchUp(message, ignoreListeners, true);
         //listeners already called
-        this.dispatchDown(message, true)
+        this.dispatchDown(message, true, false)
     }
 
-    private dispatchUp(message: Message) {
-        this.callListeners(message);
-        if(window.parent != null) {
-            window.parent.postMessage(message, window.location.href);
-        } else {
-            let event = this.transformToEvent(message, true);
-            document.dispatchEvent(event);
-        }
-    }
-
-    private dispatchDown(message: Message, ignoreListeners = false) {
-        if(!ignoreListeners) {
+    private dispatchUp(message: Message, ignoreListeners = true, dispatchSameLevel = true) {
+        if (!ignoreListeners) {
             this.callListeners(message);
         }
+        this.processedMessages[message.identifier] = message.creationDate;
 
+        if (window.parent != null) {
+            window.parent.postMessage(message, window.location.href);
+        }
+        if (dispatchSameLevel) {
+            this.dispatchSameLevel(message);
+        }
+
+
+    }
+
+    private dispatchSameLevel(message: Message) {
+        let event = this.transformToEvent(message, true);
+        //we also dispatch sideways
+        window.dispatchEvent(event);
+    }
+
+//a dispatch of our own should never trigger the listeners hence the default true
+    private dispatchDown(message: Message, ignoreListeners = true, dispatchSameLevel = true) {
+        if (!ignoreListeners) {
+            this.callListeners(message);
+        }
+        this.processedMessages[message.identifier] = message.creationDate;
 
         window.document.dispatchEvent(this.transformToEvent(message));
         /*we now notify all iframes lying underneath */
         document.querySelectorAll("iframe").forEach((element: HTMLIFrameElement) => {
-            element.contentWindow.postMessage(message,"*")
+            element.contentWindow.postMessage(message, "*")
         });
-        //TODO shadow dom
+        if (dispatchSameLevel) {
+            this.dispatchSameLevel(message);
+        }
     }
 
     private callListeners(message: Message) {
@@ -152,15 +161,15 @@ export class Broker {
         return this.createCustomEvent(Broker.EVENT_TYPE, messageWrapper);
     }
 
-    private createCustomEvent (name: string, wrapper: any): any {
-        if('undefined' == typeof CustomEvent) {
+    private createCustomEvent(name: string, wrapper: any): any {
+        if ('undefined' == typeof window.CustomEvent) {
             let e: any = document.createEvent('HTMLEvents');
             e.detail = wrapper.detail;
             e.initEvent(name, wrapper.bubbles, wrapper.cancelable);
             return e;
 
         } else {
-            return new CustomEvent(name, wrapper);
+            return new window.CustomEvent(name, wrapper);
         }
 
     }
