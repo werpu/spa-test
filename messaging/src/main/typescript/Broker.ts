@@ -13,6 +13,40 @@ import {Direction} from "./Direction";
  *
  * we use the dom event system as transport and encapsule iframe and shadow dom mechanisms in a transparent way to
  * pull this off
+ *
+ *
+ *
+ * usage
+ *
+ * broker = new Broker(optional rootElement)
+ *
+ * defines a message broker within a scope of rootElment (without it is window aka the current isolation level)
+ *
+ * broker.registerListener(channel, listener) registers a new listener to the current broker and channel
+ * broker.unregisterListener(channel, listener) unregisters the given listener
+ *
+ * broker.broadcast(message, optional direction, optional callBrokerListeners)
+ * sends a message (channel included in the message object) in a direction (up, down, both)
+ * and also optionally calls the listeners on the same broker (default off)
+ *
+ * the flow is like
+ * up messages are propagated upwards only until it reaches the outer top of the dom
+ * downards, the messages are propagaed downwards only
+ * both the message is propagated into both directions
+ *
+ * Usually messages sent from the same broker are not processed within... however by setting
+ * callBrokerListeners to true the listeners on the same broker also are called
+ * brokers on the same level will get the message and process it automatically no matter what.
+ * That way you can exclude the source from message processing (and it is done that way automatically)
+ *
+ * Isolation levels. Usually every isolation level needs its own broker object registering
+ * on the outer bounds
+ *
+ * aka documents will register on window
+ * iframes on the iframe windowObject
+ * isolated shadow doms... document
+ *
+ *
  */
 export class Broker {
 
@@ -30,8 +64,10 @@ export class Broker {
 
     private cleanupCnt = 0;
 
+    isShadowDom = false;
 
-    constructor(wnd = window) {
+
+    constructor(wnd: HTMLElement | Window | ShadowRoot = window, public name="brokr") {
 
         let evtHandler = (event: MessageEvent | CustomEvent<Message>) => {
             let details = (<CustomEvent>event)?.detail || (<MessageEvent>event)?.data;
@@ -47,8 +83,16 @@ export class Broker {
             }
         };
 
-        wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
-        wnd.addEventListener("message", (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+        if((<any>wnd).host) {
+            let host = (<ShadowRoot>wnd).host;
+            host.setAttribute("data-broker", "1");
+            host.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+            host.addEventListener("message", (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+
+        } else {
+            wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+            wnd.addEventListener("message", (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+        }
     }
 
     registerListener(channel: string, listener: (msg: Message) => void) {
@@ -117,8 +161,6 @@ export class Broker {
         if (callBrokerListeners) {
             this.dispatchSameLevel(message);
         }
-
-
     }
 
     private dispatchSameLevel(message: Message) {
@@ -133,12 +175,15 @@ export class Broker {
             this.callListeners(message);
         }
         this.processedMessages[message.identifier] = message.creationDate;
-
-        window.document.dispatchEvent(this.transformToEvent(message));
+        let evt = this.transformToEvent(message);
+        window.dispatchEvent(evt);
         /*we now notify all iframes lying underneath */
         document.querySelectorAll("iframe").forEach((element: HTMLIFrameElement) => {
             element.contentWindow.postMessage(message, "*")
         });
+
+        document.querySelectorAll("[data-broker='1']").forEach((element: HTMLElement) => element.dispatchEvent(evt))
+
         if (callBrokerListeners) {
             this.dispatchSameLevel(message);
         }

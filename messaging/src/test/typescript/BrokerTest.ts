@@ -18,6 +18,7 @@ let iframe = `
             <div id="received">false</div>
         `;
 
+const CHANNEL = "booga";
 
 let applyMessageReceiver = function (contentWindow: any, msg: Message, brokr = new Broker(contentWindow)) {
     contentWindow["passMessage"] = function (message: Message) {
@@ -47,6 +48,7 @@ describe('Broker tests', function () {
                 <div id="id_3" class="blarg1 blarg2"></div>
                 <div id="id_4"></div>
                 <iframe id="iframe1"></iframe>
+                <div id="shadow1"></div>
             </body>
             </html>
     
@@ -157,7 +159,6 @@ describe('Broker tests', function () {
         let broker1CallCnt = 0;
         let broker2CallCnt = 0;
 
-        const CHANNEL = "booga";
 
         broker1.registerListener(CHANNEL, (message: Message) => {
             broker1CallCnt++;
@@ -176,6 +177,37 @@ describe('Broker tests', function () {
 
         expect(broker1CallCnt == 1).to.eq(true);
         expect(broker2CallCnt == 1).to.eq(true);
+
+    });
+
+    it('shadow dom handling', function () {
+        //closed not possible this seals the element off entirely, this is a no go
+        //also a closed shadow root is not recommended, there are other ways of achieving partial
+        //isolation
+        var shadowRoot:ShadowRoot =  (<any>document.getElementById('shadow1')).attachShadow({mode: 'open'});
+        expect(shadowRoot != null).to.be.true;
+
+        //we now attach the brokers
+        let origBroker = new Broker(window, "orig");
+        let shadowBroker = new Broker(shadowRoot, "shadow");
+        shadowRoot.innerHTML = "<div class='received'>false</div>";
+
+        let shadowBrokerReceived = 0;
+        shadowBroker.registerListener(CHANNEL, (msg: Message) => {
+            shadowBrokerReceived++;
+        });
+
+        let brokerReceived = 0;
+        origBroker.registerListener(CHANNEL, (msg: Message) => {
+            brokerReceived++;
+        });
+
+        origBroker.broadcast(new Message(CHANNEL, "booga"));
+        expect(shadowBrokerReceived).to.be.eq(1);
+        expect(brokerReceived).to.eq(0);
+
+        shadowBroker.broadcast(new Message(CHANNEL, "booga2"), Direction.UP);
+        expect(brokerReceived).to.eq(1);
 
     });
 
