@@ -14,8 +14,6 @@ import {Direction} from "./Direction";
  * we use the dom event system as transport and encapsule iframe and shadow dom mechanisms in a transparent way to
  * pull this off
  *
- *
- *
  * usage
  *
  * broker = new Broker(optional rootElement)
@@ -90,9 +88,11 @@ export class Broker {
             let host = (<ShadowRoot>wnd).host;
             host.setAttribute("data-broker", "1");
             host.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) => evtHandler(evt), {capture: true});
+            /*dom message usable by iframes*/
             host.addEventListener("message", (evt: MessageEvent) => evtHandler(evt), {capture: true});
         } else {
             wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) => evtHandler(evt), {capture: true});
+            /*dom message usable by iframes*/
             wnd.addEventListener("message", (evt: MessageEvent) => evtHandler(evt), {capture: true});
         }
     }
@@ -247,11 +247,9 @@ export class Broker {
 
     }
 
-
-    private messageStillActive(key: string) {
+    private messageStillActive(key: string):boolean {
         return this.processedMessages[key] > ((new Date()).getMilliseconds() - this.TIMEOUT_IN_MS);
     }
-
 
     /**
      * reserves the listener namespace and wildcard namespace for the given identifier
