@@ -1,12 +1,19 @@
 {
   "name": "messaging",
   "version": "1.0.0",
-  "description": "My webpack project",
-  "main": "index.js",
+  "description": "Messaging",
+  "main": "dist/js/commonjs/index.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register -P ./src/ ./src/test/typescript/**/*Test.ts",
+    "build-umd": "webpack --env.TARGET_TYPE=umd",
+    "build-window": "webpack --env.TARGET_TYPE=window",
+    "build-common": "webpack --env.TARGET_TYPE=commonjs",
+    "build-system": "webpack --env.TARGET_TYPE=system",
+    "build-amd": "webpack --env.TARGET_TYPE=amd",
+    "build-amd-require": "webpack --env.TARGET_TYPE=amd-require",
     "start": "webpack-dev-server",
-    "build": "webpack"
+    "build": "npm run build-umd && npm run build-common && npm run build-system && npm run build-amd && npm run build-amd-require"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +31,8 @@
     "copy-webpack-plugin": "^5.0.3",
     "css-loader": "^5.0.0",
     "declaration-bundler-webpack-plugin": "^1.0.3",
+    "filemanager-webpack-plugin-fixed": "^2.0.9",
+    "hard-source-webpack-plugin": "^0.13.1",
     "html-webpack-plugin": "^4.5.0",
     "jsdom": "^16.4.0",
     "less": "^3.12.2",
@@ -33,12 +42,11 @@
     "request": "^2.88.2",
     "sinon": "^9.0.2",
     "style-loader": "^2.0.0",
-    "ts-loader": "^8.0.8",
-    "ts-node": "^9.0.0",
+    "ts-loader": "^7.0.1",
+    "ts-node": "^8.9.0",
     "typescript": "^4.0.5",
-    "webpack": "^4.44.2",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0",
-    "wepack-cli": "0.0.1-security"
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.11.0"
   }
 }
