@@ -60,15 +60,20 @@ export class Broker {
 
     private readonly TIMEOUT_IN_MS = 1000;
 
+    private rootElem;
+    private msgHandler;
+
+
+    private readonly MSG_EVENT = "message";
 
     /**
      * constructor has an optional root element
      * and an internal name
      *
-     * @param wnd
+     * @param scopeElement
      * @param name
      */
-    constructor(wnd: HTMLElement | Window | ShadowRoot = window, public name = "brokr") {
+    constructor(scopeElement: HTMLElement | Window | ShadowRoot = window, public name = "brokr") {
 
         let evtHandler = (event: MessageEvent | CustomEvent<Message>) => {
             let details = (<CustomEvent>event)?.detail || (<MessageEvent>event)?.data;
@@ -83,18 +88,34 @@ export class Broker {
                 this.broadcast(msg, Direction.DOWN, false);
             }
         };
+        this.msgHandler = (evt: MessageEvent) => evtHandler(evt), {capture: true};
+        this.register(scopeElement);
 
-        if ((<any>wnd).host) {
-            let host = (<ShadowRoot>wnd).host;
+    }
+
+    /**
+     * register the current broker into a scope defined by wnd
+     * @param scopeElement
+     */
+    register(scopeElement: HTMLElement | Window | ShadowRoot) {
+        this.rootElem = (<any>scopeElement).host ? (<any>scopeElement).host : scopeElement;
+        if ((<any>scopeElement).host) {
+            let host = (<ShadowRoot>scopeElement).host;
             host.setAttribute("data-broker", "1");
-            host.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) => evtHandler(evt), {capture: true});
-            /*dom message usable by iframes*/
-            host.addEventListener("message", (evt: MessageEvent) => evtHandler(evt), {capture: true});
-        } else {
-            wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) => evtHandler(evt), {capture: true});
-            /*dom message usable by iframes*/
-            wnd.addEventListener("message", (evt: MessageEvent) => evtHandler(evt), {capture: true});
         }
+
+        this.rootElem.addEventListener(Broker.EVENT_TYPE, this.msgHandler);
+        /*dom message usable by iframes*/
+        this.rootElem.addEventListener(this.MSG_EVENT, this.msgHandler);
+    }
+
+    /**
+     * manual unregister function, to unregister as broker from the current
+     * scoe
+     */
+    unregister() {
+       this.rootElem.removeListener(Broker.EVENT_TYPE, this.msgHandler)
+       this.rootElem.removeListener(this.MSG_EVENT, this.msgHandler)
     }
 
     /**
@@ -247,7 +268,7 @@ export class Broker {
 
     }
 
-    private messageStillActive(key: string):boolean {
+    private messageStillActive(key: string): boolean {
         return this.processedMessages[key] > ((new Date()).getMilliseconds() - this.TIMEOUT_IN_MS);
     }
 
