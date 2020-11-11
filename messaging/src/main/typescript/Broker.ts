@@ -51,28 +51,31 @@ import {Direction} from "./Direction";
 export class Broker {
 
     static readonly EVENT_TYPE = "brokerEvent";
-
-
     /**
      * we can split the listeners with the system
      * namespace... and type (aka identifier criteria)
      */
     private messageListeners: any = {};
-
     private processedMessages: any = {};
-
-
     private cleanupCnt = 0;
-
     isShadowDom = false;
 
+    private readonly TIMEOUT_IN_MS = 1000;
 
-    constructor(wnd: HTMLElement | Window | ShadowRoot = window, public name="brokr") {
+
+    /**
+     * constructor has an optional root element
+     * and an internal name
+     *
+     * @param wnd
+     * @param name
+     */
+    constructor(wnd: HTMLElement | Window | ShadowRoot = window, public name = "brokr") {
 
         let evtHandler = (event: MessageEvent | CustomEvent<Message>) => {
             let details = (<CustomEvent>event)?.detail || (<MessageEvent>event)?.data;
-            if (details instanceof Message) {
-
+            //javascript loses the type info in certain module types
+            if (details?.identifier && details?.message) {
                 let msg: Message = details;
                 if (msg.identifier in this.processedMessages) {
                     return;
@@ -83,18 +86,22 @@ export class Broker {
             }
         };
 
-        if((<any>wnd).host) {
+        if ((<any>wnd).host) {
             let host = (<ShadowRoot>wnd).host;
             host.setAttribute("data-broker", "1");
-            host.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
-            host.addEventListener("message", (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
-
+            host.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) => evtHandler(evt), {capture: true});
+            host.addEventListener("message", (evt: MessageEvent) => evtHandler(evt), {capture: true});
         } else {
-            wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
-            wnd.addEventListener("message", (evt: MessageEvent) =>  evtHandler(evt), {capture: true});
+            wnd.addEventListener(Broker.EVENT_TYPE, (evt: MessageEvent) => evtHandler(evt), {capture: true});
+            wnd.addEventListener("message", (evt: MessageEvent) => evtHandler(evt), {capture: true});
         }
     }
 
+    /**
+     * registers a listener on a channel
+     * @param channel the channel to register the listeners for
+     * @param listener the listener to register
+     */
     registerListener(channel: string, listener: (msg: Message) => void) {
         this.reserveListenerNS(channel);
 
@@ -108,39 +115,61 @@ export class Broker {
         });
     }
 
-    gcProcessedMessages() {
+    /**
+     * unregisters a listener from this channel
+     *
+     * @param channel the channel to unregister from
+     * @param listener the listener to unregister the channel from
+     */
+    unregisterListener(channel: string, listener: (msg: Message) => void) {
+        this.messageListeners[channel] = (this.messageListeners[channel] || []).filter((item: any) => item !== listener);
+    }
+
+    /**
+     * broadcast a message
+     * the message contains the channel and the data and some internal bookeeping data
+     *
+     * @param message the message dot send
+     * @param direction the direction (up, down, both)
+     * @param callBrokerListeners if set to true.. the brokers on the same level are also notified
+     * (for instance 2 iframes within the same parent broker)
+     *
+     */
+    broadcast(message: Message, direction: Direction = Direction.DOWN, callBrokerListeners = true) {
+        try {
+            switch (direction) {
+                case Direction.DOWN:
+                    this.dispatchDown(message, callBrokerListeners);
+                    break;
+                case Direction.UP:
+                    this.dispatchUp(message, callBrokerListeners)
+                    break;
+                case Direction.BOTH:
+                    this.dispatchBoth(message, callBrokerListeners);
+                    break;
+            }
+        } finally {
+            this.gcProcessedMessages();
+        }
+    }
+
+
+    /**
+     * garbage collects the processed messages queue
+     * usually after one second
+     */
+    private gcProcessedMessages() {
         if ((++this.cleanupCnt) % 10 != 0) {
             return;
         }
         let newProcessedMessages: any = {};
         for (let key in this.processedMessages) {
-            if (this.processedMessages[key] < ((new Date()).getMilliseconds() - 1000)) continue;
+            if (this.messageStillActive(key)) continue;
             newProcessedMessages[key] = this.processedMessages[key];
         }
         this.processedMessages = newProcessedMessages;
     }
 
-    unregisterListener(channel: string, listener: (msg: Message) => void) {
-        this.messageListeners = (this.messageListeners[channel] || []).filter((item: any) => item !== listener);
-    }
-
-    broadcast(message: Message, direction: Direction = Direction.DOWN, callBrokerListeners = true) {
-
-        switch (direction) {
-            case Direction.DOWN:
-                this.dispatchDown(message, callBrokerListeners);
-                break;
-            case Direction.UP:
-                this.dispatchUp(message, callBrokerListeners)
-                break;
-            case Direction.BOTH:
-                this.dispatchBoth(message, callBrokerListeners);
-                break;
-        }
-
-
-        this.gcProcessedMessages();
-    }
 
     private dispatchBoth(message: Message, ignoreListeners = true) {
 
@@ -154,9 +183,8 @@ export class Broker {
             this.callListeners(message);
         }
         this.processedMessages[message.identifier] = message.creationDate;
-
         if (window.parent != null) {
-            window.parent.postMessage(message, window.location.href);
+            window.parent.postMessage(message, "*");
         }
         if (callBrokerListeners) {
             this.dispatchSameLevel(message);
@@ -169,7 +197,7 @@ export class Broker {
         window.dispatchEvent(event);
     }
 
-//a dispatch of our own should never trigger the listeners hence the default true
+    //a dispatch of our own should never trigger the listeners hence the default true
     private dispatchDown(message: Message, ignoreListeners = true, callBrokerListeners = true) {
         if (!ignoreListeners) {
             this.callListeners(message);
@@ -218,6 +246,12 @@ export class Broker {
         }
 
     }
+
+
+    private messageStillActive(key: string) {
+        return this.processedMessages[key] > ((new Date()).getMilliseconds() - this.TIMEOUT_IN_MS);
+    }
+
 
     /**
      * reserves the listener namespace and wildcard namespace for the given identifier

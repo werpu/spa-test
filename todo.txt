@@ -107,8 +107,15 @@ So a liberal license aka something like MIT should be necessary!
 ----
 
 -- double build
+
+
 -- utility module (single spa)
+
 -- messaging
+... done, small demo pending.. coming up...
+
+
+
 -- portal guidelines (start)
 
 
