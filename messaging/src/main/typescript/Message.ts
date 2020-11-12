@@ -5,7 +5,6 @@ export class Message {
     identifier?:string;
     targetOrigin?:string;
 
-
     constructor(channel: string, public message: any = {}, targetOrigin="*") {
         this.channel = channel;
         this.targetOrigin = targetOrigin;
