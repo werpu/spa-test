@@ -56,7 +56,6 @@ export class Broker {
     private messageListeners: any = {};
     private processedMessages: any = {};
     private cleanupCnt = 0;
-    private isShadowDom = false;
     private rootElem;
     private msgHandler;
 
@@ -85,7 +84,7 @@ export class Broker {
                 this.broadcast(msg, Direction.DOWN, false);
             }
         };
-        this.msgHandler = (evt: MessageEvent) => evtHandler(evt), {capture: true};
+        this.msgHandler = (evt: MessageEvent) => evtHandler(evt);
         this.register(scopeElement);
     }
 
@@ -100,9 +99,9 @@ export class Broker {
             host.setAttribute("data-broker", "1");
         }
 
-        this.rootElem.addEventListener(Broker.EVENT_TYPE, this.msgHandler);
+        this.rootElem.addEventListener(Broker.EVENT_TYPE, this.msgHandler, {capture: true});
         /*dom message usable by iframes*/
-        this.rootElem.addEventListener(this.MSG_EVENT, this.msgHandler);
+        this.rootElem.addEventListener(this.MSG_EVENT, this.msgHandler, {capture: true});
     }
 
     /**
@@ -201,7 +200,7 @@ export class Broker {
         }
         this.processedMessages[message.identifier] = message.creationDate;
         if (window.parent != null) {
-            window.parent.postMessage(message, "*");
+            window.parent.postMessage(message, message.targetOrigin);
         }
         if (callBrokerListeners) {
             this.dispatchSameLevel(message);
@@ -224,7 +223,7 @@ export class Broker {
         window.dispatchEvent(evt);
         /*we now notify all iframes lying underneath */
         document.querySelectorAll("iframe").forEach((element: HTMLIFrameElement) => {
-            element.contentWindow.postMessage(message, "*")
+            element.contentWindow.postMessage(message, message.targetOrigin);
         });
 
         document.querySelectorAll("[data-broker='1']").forEach((element: HTMLElement) => element.dispatchEvent(evt))
