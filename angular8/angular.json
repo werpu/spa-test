@@ -40,12 +40,25 @@
             }
           },
           "configurations": {
+            "server": {
+              "fileReplacements": [
+                {
+                  "replace": "src/main.single-spa.ts",
+                  "with": "src/main.ts"
+                },
+                {
+                  "replace": "tsconfig.app.json",
+                  "with": "tsconfig.json"
+                }
+              ]
+            },
             "production": {
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
+
               ],
               "optimization": true,
               "outputHashing": "none",
@@ -76,6 +89,9 @@
             "browserTarget": "ang-app2:build"
           },
           "configurations": {
+            "server": {
+              "browserTarget": "ang-app2:build:server"
+            },
             "production": {
               "browserTarget": "ang-app2:build:production"
             }
@@ -132,5 +148,6 @@
       }
     }
   },
+
   "defaultProject": "ang-app2"
 }

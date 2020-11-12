@@ -56,14 +56,11 @@ export class Broker {
     private messageListeners: any = {};
     private processedMessages: any = {};
     private cleanupCnt = 0;
-    isShadowDom = false;
-
-    private readonly TIMEOUT_IN_MS = 1000;
-
+    private isShadowDom = false;
     private rootElem;
     private msgHandler;
 
-
+    private readonly TIMEOUT_IN_MS = 1000;
     private readonly MSG_EVENT = "message";
 
     /**
@@ -90,7 +87,6 @@ export class Broker {
         };
         this.msgHandler = (evt: MessageEvent) => evtHandler(evt), {capture: true};
         this.register(scopeElement);
-
     }
 
     /**
