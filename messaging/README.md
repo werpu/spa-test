@@ -3,7 +3,7 @@
 This project is a library which provides a jms like messaging
 between different isolation layers in a web page...
 
-The ideas is that méssages are sent via different channels
+The ideas is that messages are sent via different channels
 and then ever isolation layer can subscribe to those channels
 and receive the messages. Or send messages back into the channel.
 
