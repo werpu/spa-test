@@ -151,7 +151,7 @@ export class Broker {
      * (for instance 2 iframes within the same parent broker)
      *
      */
-    broadcast(message: Message, direction: Direction = Direction.DOWN, callBrokerListeners = true) {
+    broadcast(message: Message, direction: Direction = Direction.ALL, callBrokerListeners = true) {
         try {
             switch (direction) {
                 case Direction.DOWN:
@@ -160,7 +160,7 @@ export class Broker {
                 case Direction.UP:
                     this.dispatchUp(message, callBrokerListeners)
                     break;
-                case Direction.BOTH:
+                case Direction.ALL:
                     this.dispatchBoth(message, callBrokerListeners);
                     break;
             }

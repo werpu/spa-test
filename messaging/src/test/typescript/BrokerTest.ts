@@ -167,13 +167,13 @@ describe('Broker tests', function () {
             broker2CallCnt++;
         });
 
-        broker1.broadcast(new Message(CHANNEL, "booga"), Direction.BOTH);
+        broker1.broadcast(new Message(CHANNEL, "booga"), Direction.ALL);
 
 
         expect(broker1CallCnt == 0).to.eq(true);
         expect(broker2CallCnt == 1).to.eq(true);
 
-        broker2.broadcast(new Message(CHANNEL, "booga"), Direction.BOTH);
+        broker2.broadcast(new Message(CHANNEL, "booga"), Direction.ALL);
 
         expect(broker1CallCnt == 1).to.eq(true);
         expect(broker2CallCnt == 1).to.eq(true);
