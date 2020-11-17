@@ -47,9 +47,9 @@ Following changes in the angular.json were performed
     ....
     "serve": {
       "configurations": {
-                  "server": {
-                    "browserTarget": "ang-app2:build:server"
-                  },
+              "server": {
+                "browserTarget": "ang-app2:build:server"
+              },
     }
 ```
 

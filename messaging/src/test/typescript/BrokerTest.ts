@@ -67,14 +67,6 @@ describe('Broker tests', function () {
             language: "en-En"
         };
 
-        /*this.xhr = sinon.useFakeXMLHttpRequest();
-        this.requests = [];
-        this.xhr.onCreate = (xhr) => {
-            this.requests.push(xhr);
-        };
-        (<any>global).XMLHttpRequest = this.xhr;
-        (<any>window).XMLHttpRequest = this.xhr;*/
-
     });
 
     /*relays a message from an iframe up into the global context*/
@@ -216,11 +208,7 @@ describe('Broker tests', function () {
         //not closed shadow dom works in a way, that you basically bind the broker as external
         //to the external element and then use the message handler to pass the data back into
         //your shadow Root ... the shadow root is basically an internal isolation you can pass
-        //That way, but you have to do it yourself by defining a broker in your component
+        //That way, but you have to do it yourself by defining a broker in your isolated component
 
     });
-
-
-    //TODO shadow dom...
-
 });
