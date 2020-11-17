@@ -205,7 +205,7 @@ describe('Broker tests', function () {
         shadowBroker.broadcast(new Message(CHANNEL, "booga2"), Direction.UP);
         expect(brokerReceived).to.eq(1);
 
-        //not closed shadow dom works in a way, that you basically bind the broker as external
+        //open shadow dom works in a way, that you basically bind the broker as external
         //to the external element and then use the message handler to pass the data back into
         //your shadow Root ... the shadow root is basically an internal isolation you can pass
         //That way, but you have to do it yourself by defining a broker in your isolated component
