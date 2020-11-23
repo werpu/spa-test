@@ -67,3 +67,40 @@ which is loaded by systemjs, the name of the file it wants to fetch
 can be adjusted on the single spa side.
 That way a dual build would be possible without any restrictions
 
+## Messaging
+
+For messaging, the messaging library of the mona-dish project
+was used:
+
+https://github.com/werpu/mona-dish
+
+https://github.com/werpu/mona-dish/blob/master/docs/Messaging.md
+
+you can integrate it in two ways
+
+a) via npm npm install mona-dish --save
+b) via cdn: 
+
+```html
+  <script type="systemjs-importmap">
+{
+  "imports": {
+    "messaging": "https://unpkg.com/mona-dish@0.19.0/dist/js/system/index.js"
+  }
+}
+  </script>
+````
+
+Àfter that you have to point the systemjs loader to the library:
+
+````javascript
+ Promise.all([System.import('mona-dish')]).then(([monadish]) => {
+
+    const {Broker, Message, Direction} = monadish;
+
+    window.broker = new Broker();
+````
+
+Also check out the other tools mona-dish provides
+(Streams, jquery like dom query built on top of the 
+dom query api, shadow dom support etc...)
