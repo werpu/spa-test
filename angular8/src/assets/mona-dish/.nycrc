@@ -1,5 +1,0 @@
-{
-    "extends": "@istanbuljs/nyc-config-typescript",
-    "all": true,
-    "exclude": ["**/test/**/*.*","**/*.config.*", "**/Messages_*.*","**/*Probe*.*",  "**/*.js"]
-}
