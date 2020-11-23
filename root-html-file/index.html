@@ -24,7 +24,7 @@
           "navbar": "http://localhost:4300/main.js",
           "single-spa": "https://cdnjs.cloudflare.com/ajax/libs/single-spa/5.5.0/system/single-spa.min.js",
           "single-spa-layout": "https://unpkg.com/single-spa-layout@1.0.0-beta.2/dist/system/single-spa-layout.min.js",
-          "messaging": "./assets/messaging/system/index.js"
+          "monadish": "./node_modules/mona-dish/dist/js/system/index.js"
         }
       }
 
@@ -91,9 +91,9 @@
 <body>
 <script>
 
-    Promise.all([System.import('single-spa'), System.import('single-spa-layout'), System.import('messaging')]).then(([singleSpa, singleSpaLayout, messaging]) => {
+    Promise.all([System.import('single-spa'), System.import('single-spa-layout'), System.import('monadish')]).then(([singleSpa, singleSpaLayout, monadish]) => {
         const {constructApplications, constructLayoutEngine, constructRoutes} = singleSpaLayout;
-        const {Broker, Message, Direction} = messaging;
+        const {Broker, Message, Direction} = monadish;
         const {registerApplication, start} = singleSpa;
         let broker = new Broker();
 

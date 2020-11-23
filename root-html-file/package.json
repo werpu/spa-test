@@ -11,6 +11,6 @@
     "serve": "^11.1.0"
   },
   "dependencies": {
-    "mona-dish": "^0.18.0"
+    "mona-dish": "^0.19.0"
   }
 }
