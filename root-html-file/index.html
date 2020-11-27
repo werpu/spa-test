@@ -108,7 +108,7 @@
         applications.forEach(registerApplication);
 
         window.sendMsg = () => {
-            broker.broadcast(new Message("portletEvt", "Button Pressed"), Direction.DOWN);
+            broker.broadcast("portletEvt", new Message("Button Pressed"), Direction.DOWN);
         }
 
         broker.registerListener("pageMessage", (msg) => {
